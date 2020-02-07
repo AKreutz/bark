@@ -55,7 +55,8 @@ class MapInterface {
 
   bool FindLanesAroundPosition(const modules::geometry::Point2d& position,
                                 const float distance,
-                                std::vector<opendrive::LanePtr>& lanes) const;
+                                std::vector<opendrive::LaneId>& lane_ids,
+                                bool type_driving_only = true) const;
 
   LanePtr FindLane(const Point2d& point) const;
 

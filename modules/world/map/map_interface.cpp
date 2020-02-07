@@ -94,7 +94,8 @@ bool MapInterface::FindNearestLanes(const Point2d &point,
 bool modules::world::map::MapInterface::FindLanesAroundPosition(
   const modules::geometry::Point2d& position,
   const float distance,
-  std::vector<opendrive::LanePtr>& lanes) const {
+  std::vector<opendrive::LaneId>& lane_ids,
+  bool type_driving_only) const {
   if (!open_drive_map_) {
     return false;
   }
@@ -105,16 +106,21 @@ bool modules::world::map::MapInterface::FindLanesAroundPosition(
   Point2d min_corner = modules::geometry::operator-(position, Point2d(distance, distance));
   Point2d max_corner = modules::geometry::operator+(position, Point2d(distance, distance));
   boost::geometry::model::box<Point2d> box(min_corner, max_corner);
+
   std::vector<rtree_lane_value> results;
-  rtree_lane_.query(boost::geometry::index::intersects(box), std::back_inserter(results));
+  if (type_driving_only) {
+    rtree_lane_.query(boost::geometry::index::intersects(box) && boost::geometry::index::satisfies(is_lane_type), std::back_inserter(results));
+  } else {
+    rtree_lane_.query(boost::geometry::index::intersects(box), std::back_inserter(results));
+  }
 
   if (results.empty()) {
     return false;
   }
 
-  lanes.clear();
+  lane_ids.clear();
   for (auto const &result : results) {
-    lanes.push_back(result.second);
+    lane_ids.push_back(result.second->get_id());
   }
 
   return true;
